@@ -9,10 +9,10 @@ require 'aws/ses'
 require 'sanitize'
 require 'erb'
 
-#set :port, 5061
+set :port, 5061
 
 REDIS = Redis.new
-NEXT_EVENT = "20120831"
+NEXT_EVENT = "20130228"
 WAITING_LIST = "#{NEXT_EVENT}-waitinglist"
 
 # no limit at this event
@@ -22,7 +22,7 @@ CONTACT = "rsvp@js.la"
 def rsvps_left()
   rsvps = REDIS.keys "#{NEXT_EVENT}*"
 #  RSVP_LIMIT - rsvps.length
-  return rsvps
+  return rsvps.length
 end
 
 def waitinglist_count()
@@ -54,30 +54,22 @@ end
 def send_email(email,string)
   ses = AWS::SES::Base.new(
     :access_key_id  => '',
-    :secret_access_key => ''
-
+    :secret_access_key => '',
   )
   ses.send_email(
     :to => email,
     :from => CONTACT,
-    :subject => "You've confirmed one seat for js.la on Thursday, August 30th, at 7pm",
+    :subject => "You've confirmed one seat for js.la on Thursday, February 28th, at 7pm",
     :body => "
-Hi. Thanks for your RSVP for our August meetup in Santa Monica.  We're excited to see you.
+Hi. Thanks for your RSVP for our February meetup at The Hub in Downtown Los Angeles.  We're excited to see you.
 
-We'll be meeting at Yahoo! at 7pm, with talks starting around 7:20pm.
+Cross Campus is located at 830 Traction Ave. Suite 3A, Los Angeles, CA 90013.  You'll be heading to the back of
+the lot then heading up the stairs.  Here's a map: http://goo.gl/maps/wQ39t
 
-Their address is 2400 Broadway Street, Santa Monica, CA 90404 
+There is plenty of street parking and a few pay lots nearby.
 
-You can find a map and directions here: http://goo.gl/maps/889v1
+The general format will be 2 planned talks followed by drinks.js around 9:45 at a local bar.
     
-There is meter parking and several pay lots available on the nearby streets.  Our friends 
-at Y! strongly suggest you look for street parking in the surrounding neighborhoods, since
-paid parking tends to be expensive.
-
-
-Once the meetup is over, you're welcome to join us for drinks.js at The Gaslite:
-http://www.yelp.com/biz/the-gaslite-santa-monica
-
 Should you need to cancel please visit http://js.la/cancel/#{string}
 
 We update with speaker changes and info at http://js.la and http://twitter.com/LosAngelesJS
@@ -112,7 +104,7 @@ end
 
 # jacked from http://vitobotta.com/sinatra-contact-form-jekyll/
 def valid_email?(email)
-  if email =~ /^[a-zA-Z][\w\.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]$/
+  if email =~ /^[a-zA-Z0-9][\w\.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]$/
     domain = email.match(/\@(.+)/)[1]
     Resolv::DNS.open do |dns|
       @mx = dns.getresources(domain, Resolv::DNS::Resource::IN::MX)
@@ -126,18 +118,18 @@ end
 
 get '/rsvp' do
   @seats = rsvps_left
-  if @seats > 0
+  #if @seats > 0
     @rsvps = RSVP_LIMIT - @seats
     erb :open
-  else
-    @seats = RSVP_LIMIT - @seats
-    @waitinglist = waitinglist_count
-    erb :waitinglist
-  end
+  #else
+  #  @seats = RSVP_LIMIT - @seats
+  #  @waitinglist = waitinglist_count
+  #  erb :waitinglist
+  #end
 end
 
 post '/rsvp' do
-  if rsvps_left > 0 
+#  if rsvps_left > 0 
     if captcha_pass?
       user = Hash.new
       params[:user].each do |k,v|
@@ -149,7 +141,7 @@ post '/rsvp' do
         unless already_rsvpd(email)
           rsvp(NEXT_EVENT, user)
           send_email(email,user["cancel"])
-	  @msg = "Thanks!  You have been confirmed for our August 30th event.  Check your email"
+	  @msg = "Thanks!  You have been confirmed for our Feb 28th event.  Check your email"
           erb :msg
         else
           @msg = "you are already rsvp'd for this event"
@@ -163,9 +155,9 @@ post '/rsvp' do
       @msg = "the captcha was wrong.  are you a bot?"
       erb :msg
     end
-  else #someone is fucking with us
-    erb :closed
-  end
+#  else #someone is fucking with us
+#    erb :closed
+#  end
 end
 
 get '/cancel/:authstring' do |authstring|
