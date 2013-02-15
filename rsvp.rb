@@ -16,7 +16,7 @@ NEXT_EVENT = "20130228"
 WAITING_LIST = "#{NEXT_EVENT}-waitinglist"
 
 # no limit at this event
-RSVP_LIMIT = 0
+RSVP_LIMIT = 70
 CONTACT = "rsvp@js.la"
 
 def rsvps_left()
@@ -77,8 +77,8 @@ We update with speaker changes and info at http://js.la and http://twitter.com/L
 If you have any questions please feel free to reply to this email.
 
 See you there!
+the js.la and LA Dev/Ops team
 
-the js.la team
 "
   )
 end
@@ -116,7 +116,7 @@ def valid_email?(email)
 end
 # /jacked
 
-get '/rsvp' do
+get '/holidayjam' do
   @seats = rsvps_left
   #if @seats > 0
     @rsvps = RSVP_LIMIT - @seats
@@ -160,13 +160,13 @@ post '/rsvp' do
 #  end
 end
 
-get '/cancel/:authstring' do |authstring|
+get '/holidayjam/cancel/:authstring' do |authstring|
   @seats = rsvps_left
   @authstring = authstring
   erb :confirm_cancel
 end
 
-post '/cancel/:authstring' do |authstring|
+post '/holidayjam/cancel/:authstring' do |authstring|
   email = params["email"]
   if already_rsvpd(email)
     if authstring == get_auth(email)
